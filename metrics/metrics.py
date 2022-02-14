@@ -17,3 +17,4 @@ def get_jensen_shannon_distance(a, b):
     distance.jensenshannon(np.array(a).flatten(),
                            np.array(b).flatten())
 
+

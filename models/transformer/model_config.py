@@ -1,6 +1,11 @@
 import tensorflow as tf
-from models.transformer.utils import scaled_dot_product_attention, create_padding_mask, \
-    create_look_ahead_mask, positional_encoding, point_wise_feed_forward_network
+from models.transformer.utils import (
+    scaled_dot_product_attention,
+    create_padding_mask,
+    create_look_ahead_mask,
+    positional_encoding,
+    point_wise_feed_forward_network,
+)
 
 
 class MultiHeadAttention(tf.keras.layers.Layer):
@@ -35,12 +40,12 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         v = self.split_heads(v, batch_size)
 
         scaled_attention, attention_weights = scaled_dot_product_attention(
-            q, k, v, mask)
+            q, k, v, mask
+        )
 
         scaled_attention = tf.transpose(scaled_attention, perm=[0, 2, 1, 3])
 
-        concat_attention = tf.reshape(scaled_attention,
-                                      (batch_size, -1, self.d_model))
+        concat_attention = tf.reshape(scaled_attention, (batch_size, -1, self.d_model))
 
         output = self.dense(concat_attention)
         return output, attention_weights
@@ -89,15 +94,15 @@ class DecoderLayer(tf.keras.layers.Layer):
         self.dropout2 = tf.keras.layers.Dropout(rate)
         self.dropout3 = tf.keras.layers.Dropout(rate)
 
-    def call(self, x, enc_output, training,
-           look_ahead_mask, padding_mask):
+    def call(self, x, enc_output, training, look_ahead_mask, padding_mask):
 
         attn1, attn_weights_block1 = self.mha1(x, x, x, look_ahead_mask)
         attn1 = self.dropout1(attn1, training=training)
         out1 = self.layernorm1(attn1 + x)
 
         attn2, attn_weights_block2 = self.mha2(
-            enc_output, enc_output, out1, padding_mask)
+            enc_output, enc_output, out1, padding_mask
+        )
         attn2 = self.dropout2(attn2, training=training)
         out2 = self.layernorm2(attn2 + out1)
 
@@ -109,19 +114,27 @@ class DecoderLayer(tf.keras.layers.Layer):
 
 
 class Encoder(tf.keras.layers.Layer):
-    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size,
-               maximum_position_encoding, rate=0.1):
+    def __init__(
+        self,
+        num_layers,
+        d_model,
+        num_heads,
+        dff,
+        input_vocab_size,
+        maximum_position_encoding,
+        rate=0.1,
+    ):
         super(Encoder, self).__init__()
 
         self.d_model = d_model
         self.num_layers = num_layers
 
         self.embedding = tf.keras.layers.Embedding(input_vocab_size, d_model)
-        self.pos_encoding = positional_encoding(maximum_position_encoding,
-                                                self.d_model)
+        self.pos_encoding = positional_encoding(maximum_position_encoding, self.d_model)
 
-        self.enc_layers = [EncoderLayer(d_model, num_heads, dff, rate)
-                           for _ in range(num_layers)]
+        self.enc_layers = [
+            EncoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)
+        ]
 
         self.dropout = tf.keras.layers.Dropout(rate)
 
@@ -141,8 +154,16 @@ class Encoder(tf.keras.layers.Layer):
 
 
 class Decoder(tf.keras.layers.Layer):
-    def __init__(self, num_layers, d_model, num_heads, dff, target_vocab_size,
-               maximum_position_encoding, rate=0.1):
+    def __init__(
+        self,
+        num_layers,
+        d_model,
+        num_heads,
+        dff,
+        target_vocab_size,
+        maximum_position_encoding,
+        rate=0.1,
+    ):
         super(Decoder, self).__init__()
 
         self.d_model = d_model
@@ -151,12 +172,12 @@ class Decoder(tf.keras.layers.Layer):
         self.embedding = tf.keras.layers.Embedding(target_vocab_size, d_model)
         self.pos_encoding = positional_encoding(maximum_position_encoding, d_model)
 
-        self.dec_layers = [DecoderLayer(d_model, num_heads, dff, rate)
-                           for _ in range(num_layers)]
+        self.dec_layers = [
+            DecoderLayer(d_model, num_heads, dff, rate) for _ in range(num_layers)
+        ]
         self.dropout = tf.keras.layers.Dropout(rate)
 
-    def call(self, x, enc_output, training,
-           look_ahead_mask, padding_mask):
+    def call(self, x, enc_output, training, look_ahead_mask, padding_mask):
 
         seq_len = tf.shape(x)[1]
         attention_weights = {}
@@ -168,35 +189,51 @@ class Decoder(tf.keras.layers.Layer):
         x = self.dropout(x, training=training)
 
         for i in range(self.num_layers):
-            x, block1, block2 = self.dec_layers[i](x, enc_output, training,
-                                                 look_ahead_mask, padding_mask)
+            x, block1, block2 = self.dec_layers[i](
+                x, enc_output, training, look_ahead_mask, padding_mask
+            )
 
-            attention_weights[f'decoder_layer{i+1}_block1'] = block1
-            attention_weights[f'decoder_layer{i+1}_block2'] = block2
+            attention_weights[f"decoder_layer{i+1}_block1"] = block1
+            attention_weights[f"decoder_layer{i+1}_block2"] = block2
 
         return x, attention_weights
 
 
 class Transformer(tf.keras.Model):
-    def __init__(self, num_layers, d_model, num_heads, dff, input_vocab_size,
-               target_vocab_size, pe_input, pe_target, rate=0.1):
+    def __init__(
+        self,
+        num_layers,
+        d_model,
+        num_heads,
+        dff,
+        input_vocab_size,
+        target_vocab_size,
+        pe_input,
+        pe_target,
+        rate=0.1,
+    ):
         super().__init__()
-        self.encoder = Encoder(num_layers, d_model, num_heads, dff,
-                                 input_vocab_size, pe_input, rate)
+        self.encoder = Encoder(
+            num_layers, d_model, num_heads, dff, input_vocab_size, pe_input, rate
+        )
 
-        self.decoder = Decoder(num_layers, d_model, num_heads, dff,
-                               target_vocab_size, pe_target, rate)
+        self.decoder = Decoder(
+            num_layers, d_model, num_heads, dff, target_vocab_size, pe_target, rate
+        )
 
         self.final_layer = tf.keras.layers.Dense(target_vocab_size)
 
     def call(self, inputs, training):
         inp, tar = inputs
 
-        enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(inp, tar)
+        enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(
+            inp, tar
+        )
 
         enc_output = self.encoder(inp, training, enc_padding_mask)
         dec_output, attention_weights = self.decoder(
-            tar, enc_output, training, look_ahead_mask, dec_padding_mask)
+            tar, enc_output, training, look_ahead_mask, dec_padding_mask
+        )
 
         final_output = self.final_layer(dec_output)
 

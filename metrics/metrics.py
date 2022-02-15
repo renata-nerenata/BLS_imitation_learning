@@ -9,12 +9,8 @@ def get_cosine_similarity(distribution_1, distribution_2):
 
 
 def get_hamming_distance(a, b):
-    return distance.hamming(np.array(a).flatten(),
-                            np.array(b).flatten())
+    return distance.hamming(np.array(a).flatten(), np.array(b).flatten())
 
 
 def get_jensen_shannon_distance(a, b):
-    distance.jensenshannon(np.array(a).flatten(),
-                           np.array(b).flatten())
-
-
+    distance.jensenshannon(np.array(a).flatten(), np.array(b).flatten())

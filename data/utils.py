@@ -1,4 +1,4 @@
-STANDART = ['A', 'T', 'G', 'C']
+STANDART = ["A", "T", "G", "C"]
 
 
 def get_tenzor_encoding_input(puzzle, elements=STANDART):
@@ -33,7 +33,7 @@ def get_tenzor_encoding_output(puzzle):
     for j in puzzle:
         string = []
         for k in j:
-            if k == '-':
+            if k == "-":
                 string.append(1)
             else:
                 string.append(0)
@@ -50,19 +50,19 @@ def apply_step_shift(list_, sm):
         if len(i) > max_len:
             max_len = len(i)
     elem = list_[sm[0]]
-    new_elem = ''
+    new_elem = ""
     for i in range(len(elem)):
         if i != sm[1]:
             new_elem += elem[i]
         else:
-            new_elem += '-'
+            new_elem += "-"
             new_elem += elem[i]
     max_len = len(new_elem)
 
     list_[sm[0]] = new_elem
     for i in range(len(list_)):
         if len(list_[i]) < max_len:
-            list_[i] += '-'
+            list_[i] += "-"
     return list_
 
 
@@ -74,7 +74,7 @@ def get_reverse_encoding(matr, elements=STANDART):
     max_len = len(matr[0][0])
     list_ = []
     for i in range(len(matr[0])):
-        new_elem = ''
+        new_elem = ""
         for j in range(max_len):
             if int(matr[0][i][j]) == 1:
                 new_elem += elements[0]
@@ -85,11 +85,10 @@ def get_reverse_encoding(matr, elements=STANDART):
             elif int(matr[3][i][j]) == 1:
                 new_elem += elements[3]
             else:
-                new_elem += '-'
+                new_elem += "-"
         list_.append(new_elem)
     return list_
 
 
 def get_len_for_input(list_):
     return len(max(list_, key=len))
-
